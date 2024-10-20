@@ -20,7 +20,7 @@ class wait_for_text_to_stabilize:
         
         # Wait for the text to stop changing
         WebDriverWait(driver, self.timeout).until(
-            lambda d: element.text == current_text and element.text > 0
+            lambda d: element.text == current_text and len(element.text) > 0
         )
         
         # After text stabilizes, return the element
@@ -48,9 +48,7 @@ class taideParser:
 
     def __call__(self, msg: str):
         # Find the input field and send a question
-        input_field = WebDriverWait(self.driver, 60).until(
-                wait_for_text_to_stabilize((By.ID, 'search_input'))
-            )
+        input_field = self.driver.find_element(By.ID, 'search_input')
         input_field.send_keys(msg)
         time.sleep(5)
         
