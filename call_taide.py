@@ -10,7 +10,7 @@ import os
 import time
 
 class wait_for_text_to_stabilize:
-    def __init__(self, locator, timeout=2):
+    def __init__(self, locator, timeout=10):
         self.locator = locator
         self.timeout = timeout  # Time (in seconds) to wait for text to stabilize
 
@@ -20,7 +20,7 @@ class wait_for_text_to_stabilize:
         
         # Wait for the text to stop changing
         WebDriverWait(driver, self.timeout).until(
-            lambda d: element.text == current_text
+            lambda d: element.text == current_text and element.text > 0
         )
         
         # After text stabilizes, return the element
@@ -59,7 +59,7 @@ class taideParser:
 
     def read_respond(self):
         try:
-            answer = WebDriverWait(self.driver, 10).until(
+            answer = WebDriverWait(self.driver, 100).until(
                 wait_for_text_to_stabilize((By.ID, 'myElement'))
             )
             response = answer.text
@@ -100,7 +100,7 @@ class translateParser:
     def read_respond(self):
         try:
             answer = WebDriverWait(self.driver, 10).until(
-                EC.visibility_of_element_located((By.CSS_SELECTOR, 'span.ryNqvb[jsname="W297wb"]'))
+                wait_for_text_to_stabilize((By.CSS_SELECTOR, 'span.ryNqvb[jsname="W297wb"]'))
             )
             response = answer.text
             print(response)
@@ -128,7 +128,14 @@ def ask_taide_for_answer(question, num, fw):
     
     driver.close()
     
+    if response is None:
+        fw.write("Answwer {} :\n".format(num))
+        fw.write("No answer is geneerated.")
+        fw.write("\n\n")
+        return
+    
     response = response.replace("\n", " ")
+    response = response.replace("。", "，")
     
     driver = translateParser.get_driver()
     trans_parser = translateParser(driver)
@@ -138,12 +145,18 @@ def ask_taide_for_answer(question, num, fw):
     
     time.sleep(5)
     answer = trans_parser.read_respond()
+    
+    driver.close()
+    
+    if answer is None:
+        fw.write("Answwer {} :\n".format(num))
+        fw.write("No answer is geneerated.")
+        fw.write("\n\n")
+        return
         
     fw.write("Answwer {} :\n".format(num))
     fw.write(answer)
     fw.write("\n\n")
-    
-    driver.close()
 
     return
 
